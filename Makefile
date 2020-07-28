@@ -22,7 +22,7 @@ list:
 
 default: build
 
-build: build-dist
+build: clean build-dist
 
 build-dist: $(GOFILES)
 	@echo build binary to $(OUTPUTFOLDER)

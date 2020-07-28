@@ -163,6 +163,13 @@ def cmd_serve(args):
         print(f"Error serving data: {err}")
 
 
+def cmd_version(args):
+    """
+    Print the version and exit
+    """
+    print(f"plzpy v{_version()}")
+
+
 def main():
     commands = [
         {
@@ -184,7 +191,7 @@ def main():
         },
         {
             'name': 'serve',
-            'help': 'serve the dataset from a json file',
+            'help': 'Serve the dataset from a json file',
             'target': cmd_serve,
             'opts': [
                 {
@@ -199,6 +206,14 @@ def main():
                 }
             ]
         },
+        {
+            'name': 'version',
+            'help': 'Print the version and exit',
+            'target': cmd_version,
+            'opts': [
+            ]
+        },
+
     ]
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
