@@ -10,7 +10,6 @@ readme = "README.md"
 keywords = []
 include = ["CHANGELOG.md"]
 classifiers = [
-    'License :: OSI Approved :: MIT',
     'Intended Audience :: Developers',
     'Operating System :: OS Independent',
 ]
