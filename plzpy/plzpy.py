@@ -20,15 +20,136 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from . import _version
 import argparse
+import csv
+import time
+import os
+import json
+# flask
+from flask import Flask, jsonify
+from flask_cors import cross_origin
+from waitress import serve as _serve
 
 
-# Commands
+# keys for accessing data
+
+KEY_COUNTERS = "counters"
+KEY_DISTRIB = "distributions"
+
+
+def massage(csvPath: str, jsonPath: str):
+    """
+    Process the dataset csv input to a json optimized
+    for the rest API to serve
+
+    Args:
+        csvPath(str): the path of the input csv file
+        jsonPath(str): the path of the output json file
+    """
+    print(f"Input file is ", csvPath)
+    # track the execution time
+    start = time.time()
+    # print file size
+    print(f"Input file size (gb) is {float(os.stat(csvPath).st_size) / 1e9:.4f}")
+    # read csv file
+    cZip, cYear = "PLZ", "STR_DATUM"
+    aggregate = {}  # this holds zip[year]=count
+    with open(csvPath) as fp:
+        x = 0
+        for row in csv.DictReader(fp):
+            z, y = row[cZip], row[cYear][0:4]
+            zd = aggregate.get(z)
+            # if there is no zip, add one
+            if zd is None:
+                aggregate[z] = {y: 1}
+                continue
+            # otherwise just increment
+            c = zd.get(y, 0)
+            aggregate[z][y] = c + 1
+            # print progress
+            x += 1
+            print(f"\rRecord {x}", end="")
+    print()
+    print(f"Data read after {time.time() - start}")
+
+    # step 2 prepare json output
+    counter, distrib = {}, {}  # final outputs
+    for z, ycm in aggregate.items():
+        _sum = 0
+        ycl = []  # list of year/count
+        for y, c in ycm.items():
+            _sum += c  # add the count to the sum
+            ycl.append({"year": y, "count": c})
+        # sort the result
+        ycl = sorted(ycl, key=lambda yc: yc["year"])
+        # and prepare for output
+        counter[z] = {"total": _sum}
+        distrib[z] = ycl
+    # finally write the output
+    with open(jsonPath, "w") as fp:
+        json.dump({KEY_COUNTERS: counter, KEY_DISTRIB: distrib}, fp, indent=2)
+
+    print(f"Output size(gb) is {float(os.stat(jsonPath).st_size) / 1e9: .4f}")
+    print(f"Output written at {jsonPath}")
+    print(f"Completed in {time.time() - start}")
+
 
 def cmd_massage(args):
     """
     Massage the dataset
     """
+    try:
+        massage(args.input, args.output)
+    except Exception as err:
+        print(f"Error massaging data: {err}")
+
+
+def serve(dataFile: str, address: str):
+    address, port = address.split(":")
+    port = 2007 if port is None else int(port)
+    # load the data file
+    with open(dataFile) as fp:
+        data = json.load(fp)
+
+    app = Flask(__name__, static_url_path='')
+
+    @app.route('/status')
+    @cross_origin()
+    def status():
+        return jsonify({
+            "status": "ok",
+            "version": _version(),
+            "zip_codes": len(data[KEY_COUNTERS])
+        })
+
+    @app.route("/zip/buildings")
+    @cross_origin()
+    def buildings():
+        return jsonify(data[KEY_COUNTERS])
+
+    @app.route("/zip/buildings/<code>")
+    @cross_origin()
+    def buildings_filter(code: str):
+        v = data[KEY_COUNTERS].get(code)
+        if v is None:
+            return jsonify({}), 404
+        return jsonify(v)
+
+    @app.route("/zip/buildings/history")
+    @cross_origin()
+    def history():
+        return jsonify(data[KEY_DISTRIB])
+
+    @app.route("/zip/buildings/<code>/history")
+    @cross_origin()
+    def history_filter(code: str):
+        v = data[KEY_DISTRIB].get(code)
+        if v is None:
+            return jsonify({}), 404
+        return jsonify(v)
+
+    _serve(app, host=address, port=port)
     pass
 
 
@@ -36,24 +157,27 @@ def cmd_serve(args):
     """
     Serve the api
     """
-    pass
+    try:
+        serve(args.data, args.listen)
+    except Exception as err:
+        print(f"Error serving data: {err}")
 
 
 def main():
     commands = [
         {
             'name': 'massage',
-            'help': 'parse a csv dataset into a json one',
+            'help': 'Transform data from ESRI CSV to JSON suitable for serving zip info',
             'target': cmd_massage,
             'opts': [
                 {
-                    "names": ["--in"],
-                    "help": "csv input file",
+                    "names": ["-i", "--input"],
+                    "help": "The input csv file (default data.csv)",
                     "default": "data.csv"
                 },
                 {
-                    "names": ["--out"],
-                    "help": "json output file",
+                    "names": ["-o", "--output"],
+                    "help": "The output json file (default data.json)",
                     "default": "data.json"
                 }
             ]
@@ -67,6 +191,11 @@ def main():
                     "names": ["--data"],
                     "help": "the json dataset to serve",
                     "default": "data.json"
+                },
+                {
+                    "names": ["--listen"],
+                    "help": "The address to listen to (default 0.0.0.0:2007)",
+                    "default": "0.0.0.0:2007"
                 }
             ]
         },
