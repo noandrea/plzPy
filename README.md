@@ -2,7 +2,7 @@
 
 A simple rest API that exposes data related to zip codes and buildings in Berlin.
 
-This project is the Python implementation of [PLZ](https://github.com/noandrea/plz)
+> This project is the Python implementation of [PLZ](https://github.com/noandrea/plz)
 
 The source dataset is published by [Esri](https://www.esri.de/de-de/home) 
 and is available [here](https://opendata-esri-de.opendata.arcgis.com/datasets/273bf4ae7f6a460fbf3000d73f7b2f76_0).
@@ -23,23 +23,21 @@ PLZ provides the following endpoints:
 
 ## Usage
 
-There are 2 ways to run the PLZ api service: using [Docker](#docker)(recommended) or via [manual setup](#manual-setup).
+There are 2 ways to run the PLZ api service: using Docker(recommended) or via [manual setup](#manual-setup).
 
-### Docker
+For best results with Docker please use the image from the go project as described [here](https://github.com/noandrea/plz#docker) since the image is orders of magnitude smaller.
 
-The Docker image is available at [noandrea/plz](https://hub.docker.com/repository/docker/noandrea/plz), and can be run with
-
-```sh
-docker run -p 2007:2007 noandrea/plz
-```
-
-The image is built on [scratch](https://hub.docker.com/_/scratch), the image size is ~9.3mb:
-
-[![asciicast](https://asciinema.org/a/350213.svg)](https://asciinema.org/a/350213)
 
 ### Manual setup
 
-There are 3 steps to setup the service:
+Those are the steps to run the project manually:
+
+1. Install the library
+
+```
+pip install plzpy
+```
+
 
 1. Download the dataset linked above:
 
@@ -50,86 +48,13 @@ curl -L https://opendata.arcgis.com/datasets/273bf4ae7f6a460fbf3000d73f7b2f76_0.
 2. Massage the dataset to produce an optimized json to be served via the Rest API
 
 ```sh
-plz massage --in /tmp/src.csv --out rest.json
+plzpy massage --in /tmp/src.csv --out rest.json
 ```
 
 3. Run the Rest API service
 
 ```sh
-plz serve --data rest.json
+plzpy serve --data rest.json
 ```
 
-[![asciicast](https://asciinema.org/a/350219.svg)](https://asciinema.org/a/350219)
-
-## Examples
-
-### Docker compose
-
-`docker-compose.yaml` example
-
-```yaml
-version: '3'
-services:
-  plz:
-    container_name: plz
-    image: noandrea/plz:latest
-    ports:
-    - 2007:2007
-
-```
-
-
-### K8s
-
-Kubernetes configuration example:
-
-```yaml
----
-# Deployment
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  labels:
-    app: plz
-  name: plz
-spec:
-  replicas: 1
-  revisionHistoryLimit: 3
-  selector:
-    matchLabels:
-      app: plz
-  template:
-    metadata:
-      labels:
-        app: plz
-    spec:
-      containers:
-      - env:
-        image: noandrea/plz:latest
-        imagePullPolicy: Always
-        name: plz
-        ports:
-        - name: http
-          containerPort: 2007
-        livenessProbe:
-          httpGet:
-            path: /status
-            port: 2007
----
-# Service
-# the service for the above deployment
-apiVersion: v1
-kind: Service
-metadata:
-  name: plz-service
-spec:
-  type: ClusterIP
-  ports:
-  - name: http
-    port: 80
-    protocol: TCP
-    targetPort: http
-  selector:
-    app: plz
-
-```
+[![asciicast](https://asciinema.org/a/350289.svg)](https://asciinema.org/a/350289?t=57&autoplay=1)
