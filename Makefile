@@ -13,7 +13,7 @@ OS = linux
 ARCH = amd64
 # K8S
 K8S_NAMESPACE = geo
-K8S_DEPLOYMENT = plz
+K8S_DEPLOYMENT = plzpy
 
 .PHONY: list
 list:
@@ -25,25 +25,16 @@ default: build
 build: build-dist
 
 build-dist: $(GOFILES)
-	@echo copy resources
-	cp -r README.md LICENSE $(OUTPUTFOLDER)
+	@echo build binary to $(OUTPUTFOLDER)
+	poetry build
 	@echo done
 
 build-zip: build
-	@echo build zip release
-	zip -FSmT $(APP)-$(GIT_DESCR).zip $(OUTPUTFOLDER)
-	sha1sum $(APP)-$(GIT_DESCR).zip
-	@echo done
 
 test: test-all
 
 test-all:
-	@go test $(GOPACKAGES) v -race -coverprofile=cover.out -covermode=atomic
-
-bench: bench-all
-
-bench-all:
-	@go test -bench -v $(GOPACKAGES)
+	pytest -v --junitxml test-results.xml tests --cov=$(APP) --cov-config .coveragerc --cov-report xml:coverage.xml
 
 lint: lint-all
 
@@ -69,10 +60,10 @@ docker-push:
 	@echo done
 
 docker-run: 
-	docker run -p 2004:2004 $(DOCKER_IMAGE):latest
+	docker run -p 2007:2007 $(DOCKER_IMAGE):latest
 
 debug-start:
-	@go run main.go start
+	@poetry run plzpy serve --data data.json
 
 k8s-deploy:
 	@echo deploy k8s
