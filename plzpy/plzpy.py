@@ -90,7 +90,7 @@ def massage(csvPath: str, jsonPath: str, summary: bool):
         distrib[z] = ycl
     # finally write the output
     with open(jsonPath, "w") as fp:
-        json.dump({KEY_COUNTERS: counter, KEY_DISTRIB: distrib}, fp, indent=2)
+        json.dump({KEY_COUNTERS: counter, KEY_DISTRIB: distrib}, fp)
 
     print(f"Output size(gb) is {float(os.stat(jsonPath).st_size) / 1e9: .4f}")
     print(f"Output written at {jsonPath}")
