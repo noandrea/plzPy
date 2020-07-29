@@ -38,7 +38,7 @@ KEY_COUNTERS = "counters"
 KEY_DISTRIB = "distributions"
 
 
-def massage(csvPath: str, jsonPath: str):
+def massage(csvPath: str, jsonPath: str, summary: bool):
     """
     Process the dataset csv input to a json optimized
     for the rest API to serve
@@ -46,6 +46,7 @@ def massage(csvPath: str, jsonPath: str):
     Args:
         csvPath(str): the path of the input csv file
         jsonPath(str): the path of the output json file
+        summary(bool): if True only print summary of data processing
     """
     print(f"Input file is ", csvPath)
     # track the execution time
@@ -69,8 +70,9 @@ def massage(csvPath: str, jsonPath: str):
             aggregate[z][y] = c + 1
             # print progress
             x += 1
-            print(f"\rRecord {x}", end="")
-    print()
+            if not summary:
+                print(f"\rRecord {x}", end="")
+    print(f"Processed {x} records")
     print(f"Data read after {time.time() - start}")
 
     # step 2 prepare json output
@@ -100,7 +102,7 @@ def cmd_massage(args):
     Massage the dataset
     """
     try:
-        massage(args.input, args.output)
+        massage(args.input, args.output, args.summary)
     except Exception as err:
         print(f"Error massaging data: {err}")
 
@@ -186,7 +188,14 @@ def main():
                     "names": ["-o", "--output"],
                     "help": "The output json file (default data.json)",
                     "default": "data.json"
-                }
+                },
+                {
+                    "names": ["-s", "--summary"],
+                    "help": "Print only execution summary",
+                    "default": False,
+                    "action": "store_true",
+                },
+
             ]
         },
         {
