@@ -34,7 +34,7 @@ build-zip: build
 test: test-all
 
 test-all:
-	pytest -v --junitxml test-results.xml tests --cov=$(APP) --cov-config .coveragerc --cov-report xml:coverage.xml
+	poetry run pytest -v --junitxml test-results.xml tests --cov=$(APP) --cov-config .coveragerc --cov-report xml:coverage.xml
 
 lint: lint-all
 
