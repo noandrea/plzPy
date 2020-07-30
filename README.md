@@ -58,3 +58,7 @@ plzpy serve --data rest.json
 ```
 
 [![asciicast](https://asciinema.org/a/350289.svg)](https://asciinema.org/a/350289?t=57&autoplay=1)
+
+## Development
+
+The project relies on [poetry](https://python-poetry.org/).
