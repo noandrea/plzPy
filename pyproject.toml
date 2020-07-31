@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "plzpy"
-version = "0.1.2"
+version = "0.1.3"
 description = "zip/buildings rest API for Berlin"
 authors = ["Andrea Giacobino <no.andrea@gmail.com>"]
 license = "MIT"
