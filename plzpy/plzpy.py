@@ -54,12 +54,15 @@ def massage(csvPath: str, jsonPath: str, summary: bool):
     # print file size
     print(f"Input file size (gb) is {float(os.stat(csvPath).st_size) / 1e9:.4f}")
     # read csv file
-    cZip, cYear = "PLZ", "STR_DATUM"
+    iZip, iYear = 15, 33
     aggregate = {}  # this holds zip[year]=count
     with open(csvPath) as fp:
         x = 0
-        for row in csv.DictReader(fp):
-            z, y = row[cZip], row[cYear][0:4]
+        # skip header
+        reader = csv.reader(fp)
+        next(reader)
+        for row in reader:
+            z, y = row[iZip], row[iYear][0:4]
             zd = aggregate.get(z)
             # if there is no zip, add one
             if zd is None:
