@@ -30,7 +30,8 @@ import json
 from flask import Flask, jsonify
 from flask_cors import cross_origin
 from waitress import serve as _serve
-
+# typing
+from typing import Dict
 
 # keys for accessing data
 
@@ -48,14 +49,14 @@ def massage(csvPath: str, jsonPath: str, summary: bool):
         jsonPath(str): the path of the output json file
         summary(bool): if True only print summary of data processing
     """
-    print(f"Input file is ", csvPath)
+    print(f"Input file is {csvPath}")
     # track the execution time
     start = time.time()
     # print file size
     print(f"Input file size (gb) is {float(os.stat(csvPath).st_size) / 1e9:.4f}")
     # read csv file
     iZip, iYear = 15, 33
-    aggregate = {}  # this holds zip[year]=count
+    aggregate: Dict[str, dict] = {}  # this holds zip[year]=count
     with open(csvPath) as fp:
         x = 0
         # skip header
@@ -111,8 +112,8 @@ def cmd_massage(args):
 
 
 def serve(dataFile: str, address: str):
-    address, port = address.split(":")
-    port = 2007 if port is None else int(port)
+    address, ps = address.split(":")
+    port: int = 2007 if port is None else int(ps)
     # load the data file
     with open(dataFile) as fp:
         data = json.load(fp)
