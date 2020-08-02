@@ -39,11 +39,17 @@ test-all:
 lint: lint-all
 
 lint-all:
-	flake8 plzpy
+	poetry run flake8 $(APP)
+	poetry run mypy $(APP) --ignore-missing-imports
 
 clean:
 	@echo remove $(OUTPUTFOLDER) folder
 	rm -rf $(OUTPUTFOLDER)
+	@echo done
+
+publish:
+	@echo publishing to pypi
+	poetry publish --build --username __token__
 	@echo done
 
 docker: docker-build
