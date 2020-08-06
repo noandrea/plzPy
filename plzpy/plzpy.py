@@ -112,6 +112,14 @@ def cmd_massage(args):
 
 
 def serve(dataFile: str, address: str):
+    """
+    Starts a webserver to expose REST API endpoints
+    for the zip dataset
+
+    Args:
+        dataFile(str): the path of the data file to serve
+        address(str): the address where to listen to
+    """
     address, ps = address.split(":")
     port: int = 2007 if port is None else int(ps)
     # load the data file
